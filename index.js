@@ -32,6 +32,7 @@ async function run() {
    const imageCollection = client.db("athleticDb").collection("images");
     const trainerCollection = client.db("athleticDb").collection("trainers");
     const newTrainerCollection = client.db("athleticDb").collection("newTrainers");
+    const bookingsCollection = client.db("athleticDb").collection("bookings");
    //users api
    app.post('/users', async (req,res) => {
       const user = req.body;
@@ -94,6 +95,13 @@ app.get('/api/trainers/:id', async (req, res) => {
    app.post('/api/new/trainers', async (req,res) => {
     const applier = req.body;
     const result = await newTrainerCollection.insertOne(applier);
+    res.send(result) 
+   })
+
+   //trainer booking api
+   app.post('/booking', async (req,res) => {
+    const booking = req.body;
+    const result = await bookingsCollection.insertOne(booking);
     res.send(result) 
    })
 
