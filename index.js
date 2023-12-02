@@ -2,7 +2,6 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 require('dotenv').config()
-// const { ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
 //middleware
@@ -64,19 +63,21 @@ async function run() {
         console.log(error);
       }
     });
- 
 
     // Trainer Details API
 app.get('/api/trainers/:id', async (req, res) => {
   const trainerId = req.params.id;
   try {
-    const trainer = await trainerCollection.findOne({ _id: new ObjectId(trainerId) });
+    const trainer = await trainerCollection.findOne({_id : new ObjectId(trainerId)})
+
     if (!trainer) {
-      return console.log("not found")
+      return res.status(404).json({ message: 'Trainer not found' });
     }
+
     res.json(trainer);
   } catch (error) {
     console.log(error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
