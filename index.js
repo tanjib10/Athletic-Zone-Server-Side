@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 require('dotenv').config()
+// const { ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
 //middleware
@@ -10,7 +11,7 @@ app.use(express.json());
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.yfphnhu.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -30,6 +31,7 @@ async function run() {
    const userCollection = client.db("athleticDb").collection("users");
    const subscriberCollection = client.db("athleticDb").collection("subscribers")
    const imageCollection = client.db("athleticDb").collection("images");
+    const trainerCollection = client.db("athleticDb").collection("trainers");
    //users api
    app.post('/users', async (req,res) => {
       const user = req.body;
@@ -41,16 +43,8 @@ async function run() {
       const result = await userCollection.insertOne(user)
       res.send(result)
    })
-
-   //newsletter subscription api 
-   app.post('/subscribers', async (req,res) => {
-    const subscriber = req.body;
-    const result = await subscriberCollection.insertOne(subscriber);
-    res.send(result) 
-   })
-
-
-       // Gallery API for Infinite Scrolling
+  
+          // Gallery API for Infinite Scrolling
     app.get('/api/images', async (req, res) => {
       const { skip, limit } = req.query;
       try {
@@ -60,6 +54,41 @@ async function run() {
         console.log(error)
       }
     });
+
+     // Trainers API
+    app.get('/api/trainers', async (req, res) => {
+      try {
+        const trainers = await trainerCollection.find().toArray();
+        res.json(trainers);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+ 
+
+    // Trainer Details API
+app.get('/api/trainers/:id', async (req, res) => {
+  const trainerId = req.params.id;
+  try {
+    const trainer = await trainerCollection.findOne({ _id: new ObjectId(trainerId) });
+    if (!trainer) {
+      return console.log("not found")
+    }
+    res.json(trainer);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+
+   //newsletter subscription api 
+   app.post('/subscribers', async (req,res) => {
+    const subscriber = req.body;
+    const result = await subscriberCollection.insertOne(subscriber);
+    res.send(result) 
+   })
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
