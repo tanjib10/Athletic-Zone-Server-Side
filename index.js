@@ -31,6 +31,7 @@ async function run() {
    const subscriberCollection = client.db("athleticDb").collection("subscribers")
    const imageCollection = client.db("athleticDb").collection("images");
     const trainerCollection = client.db("athleticDb").collection("trainers");
+    const newTrainerCollection = client.db("athleticDb").collection("newTrainers");
    //users api
    app.post('/users', async (req,res) => {
       const user = req.body;
@@ -86,6 +87,13 @@ app.get('/api/trainers/:id', async (req, res) => {
    app.post('/subscribers', async (req,res) => {
     const subscriber = req.body;
     const result = await subscriberCollection.insertOne(subscriber);
+    res.send(result) 
+   })
+
+   //new trainer apply api
+   app.post('/api/new/trainers', async (req,res) => {
+    const applier = req.body;
+    const result = await newTrainerCollection.insertOne(applier);
     res.send(result) 
    })
 
