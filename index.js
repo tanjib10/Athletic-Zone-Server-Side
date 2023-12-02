@@ -28,7 +28,7 @@ async function run() {
    //  await client.connect();
      
    const userCollection = client.db("athleticDb").collection("users");
-
+   const subscriberCollection = client.db("athleticDb").collection("subscribers")
 
    //users api
    app.post('/users', async (req,res) => {
@@ -40,6 +40,13 @@ async function run() {
       }
       const result = await userCollection.insertOne(user)
       res.send(result)
+   })
+
+   //newsletter subscription api 
+   app.post('/subscribers', async (req,res) => {
+    const subscriber = req.body;
+    const result = await subscriberCollection.insertOne(subscriber);
+    res.send(result) 
    })
 
     // Send a ping to confirm a successful connection
