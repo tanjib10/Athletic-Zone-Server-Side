@@ -29,7 +29,7 @@ async function run() {
      
    const userCollection = client.db("athleticDb").collection("users");
    const subscriberCollection = client.db("athleticDb").collection("subscribers")
-
+   const imageCollection = client.db("athleticDb").collection("images");
    //users api
    app.post('/users', async (req,res) => {
       const user = req.body;
@@ -48,6 +48,18 @@ async function run() {
     const result = await subscriberCollection.insertOne(subscriber);
     res.send(result) 
    })
+
+
+       // Gallery API for Infinite Scrolling
+    app.get('/api/images', async (req, res) => {
+      const { skip, limit } = req.query;
+      try {
+        const images = await imageCollection.find().skip(parseInt(skip)).limit(parseInt(limit)).toArray();
+        res.json(images);
+      } catch (error) {
+        console.log(error)
+      }
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
