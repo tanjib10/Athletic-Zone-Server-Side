@@ -94,6 +94,21 @@ app.get('/api/trainers/:id', async (req, res) => {
   }
 });
 
+//class details api
+app.get('/classes/:id', async (req, res) => {
+  const classId = req.params.id;
+  try {
+    const classes = await classesCollection.findOne({_id : new ObjectId(classId)})
+    if (!classes) {
+      return res.status(404).json({ message: 'Trainer not found' });
+    }
+    res.json(classes);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 
    //newsletter subscription api 
    app.post('/subscribers', async (req,res) => {
