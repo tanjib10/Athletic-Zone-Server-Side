@@ -25,7 +25,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-   //  await client.connect();
+    await client.connect();
      
    const userCollection = client.db("athleticDb").collection("users");
    const subscriberCollection = client.db("athleticDb").collection("subscribers")
@@ -34,7 +34,8 @@ async function run() {
     const newTrainerCollection = client.db("athleticDb").collection("newTrainers");
     const bookingsCollection = client.db("athleticDb").collection("bookings");
     const classesCollection = client.db("athleticDb").collection("classes");
-   //users api
+ const forumPostCollection = client.db("athleticDb").collection("forumPosts");
+    //users api
    app.post('/users', async (req,res) => {
       const user = req.body;
       const query = {email: user.email}
@@ -108,6 +109,68 @@ app.get('/classes/:id', async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
+
+  // Fetch forum posts with pagination
+app.get('/api/forum-posts', async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  console.log(page)
+  const pageSize = 6;
+
+  try {
+    const totalPosts = await forumPostCollection.countDocuments();
+    const totalPages = Math.ceil(totalPosts / pageSize);
+
+    const forumPosts = await forumPostCollection
+      .find()
+      .sort({ _id: -1 }) // Sort by _id in descending order for the latest posts first
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .toArray();
+
+    res.json({ forumPosts, totalPages });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
+
+      // Handle upvote/downvote
+app.post('/api/forum-posts/:id/vote', async (req, res) => {
+  const postId = req.params.id;
+  const voteType = req.body.voteType; 
+
+  try {
+    const forumPost = await forumPostCollection.findOne({ _id: new ObjectId(postId) });
+
+    if (!forumPost) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    if (voteType === "upvote") {
+      forumPost.upvotes = (forumPost.upvotes || 0) + 1;
+    } else if (voteType === "downvote") {
+      forumPost.downvotes = (forumPost.downvotes || 0) + 1;
+    }
+
+    await forumPostCollection.updateOne(
+      { _id: new ObjectId(postId) },
+      { $set: { upvotes: forumPost.upvotes, downvotes: forumPost.downvotes } }
+    );
+
+    res.json({ upvotes: forumPost.upvotes, downvotes: forumPost.downvotes });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
+
 
 
    //newsletter subscription api 
