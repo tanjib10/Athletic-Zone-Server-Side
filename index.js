@@ -33,6 +33,7 @@ async function run() {
     const trainerCollection = client.db("athleticDb").collection("trainers");
     const newTrainerCollection = client.db("athleticDb").collection("newTrainers");
     const bookingsCollection = client.db("athleticDb").collection("bookings");
+    const classesCollection = client.db("athleticDb").collection("classes");
    //users api
    app.post('/users', async (req,res) => {
       const user = req.body;
@@ -61,6 +62,16 @@ async function run() {
       try {
         const trainers = await trainerCollection.find().toArray();
         res.json(trainers);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+     // classes API
+    app.get('/classes', async (req, res) => {
+      try {
+        const classes = await classesCollection.find().toArray();
+        res.json(classes);
       } catch (error) {
         console.log(error);
       }
