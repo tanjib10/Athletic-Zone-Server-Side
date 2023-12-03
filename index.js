@@ -78,6 +78,16 @@ async function run() {
       }
     });
 
+    //user api
+    app.get('/users', async (req, res) => {
+      try {
+        const user = await userCollection.find().toArray();
+        res.json(user);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
     // Trainer Details API
 app.get('/api/trainers/:id', async (req, res) => {
   const trainerId = req.params.id;
@@ -94,6 +104,7 @@ app.get('/api/trainers/:id', async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
 
 //class details api
 app.get('/classes/:id', async (req, res) => {
@@ -171,8 +182,11 @@ app.post('/api/forum-posts/:id/vote', async (req, res) => {
 
 
 
-
-   //newsletter subscription api 
+   //newsletter subscription api
+   app.get('/subscribers', async (req,res) => {
+    const result = await subscriberCollection.find().toArray();
+    res.send(result)
+   })
    app.post('/subscribers', async (req,res) => {
     const subscriber = req.body;
     const result = await subscriberCollection.insertOne(subscriber);
@@ -192,6 +206,34 @@ app.post('/api/forum-posts/:id/vote', async (req, res) => {
     const result = await bookingsCollection.insertOne(booking);
     res.send(result) 
    })
+
+
+
+
+app.put('/users/:id', async (req, res) => {
+  const userId = req.params.id;
+  const updatedUserData = req.body;
+  try {
+    const query = { _id: new ObjectId(userId) };
+    const existingUser = await userCollection.findOne(query);
+
+    if (!existingUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    existingUser.name = updatedUserData.name || existingUser.name;
+    existingUser.phone = updatedUserData.phone || existingUser.phone;
+    existingUser.membershipID = updatedUserData.membershipID || existingUser.membershipID;
+    const result = await userCollection.updateOne(query, { $set: existingUser });
+    if (result.modifiedCount === 1) {
+      return res.json({ message: 'User updated successfully' });
+    } else {
+      return res.status(500).json({ message: 'Failed to update user' });
+    }
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 
 
 
