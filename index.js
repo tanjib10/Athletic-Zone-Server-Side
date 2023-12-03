@@ -211,6 +211,51 @@ app.post('/api/forum-posts/:id/vote', async (req, res) => {
     res.send(result)
    })
 
+ app.delete('/api/new/trainers/:id', async (req, res) => {
+  const applierId = req.params.id;
+  try {
+  const isValidObjectId = ObjectId.isValid(applierId);
+
+if (!isValidObjectId) {
+  return res.status(400).json({ message: 'Invalid ObjectId' });
+}
+
+const objectId = new ObjectId(applierId);
+const result = await newTrainerCollection.deleteOne({ _id: objectId });
+    if (result.deletedCount === 1) {
+      res.json({ message: 'Trainer application rejected successfully' });
+    } else {
+      res.status(404).json({ message: 'Trainer application not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.post('/api/new/trainers/train/:id/confirm', async (req, res) => {
+  const applierId = req.params.id;
+  try {
+    const isValidObjectId = ObjectId.isValid(applierId);
+
+if (!isValidObjectId) {
+  return res.status(400).json({ message: 'Invalid ObjectId' });
+}
+
+const objectId = new ObjectId(applierId);
+const applier = await newTrainerCollection.findOne({ _id: objectId });
+    const result = await trainerCollection.insertOne(applier);
+    if (result.insertedCount === 1) {
+      await newTrainerCollection.deleteOne({_id : new ObjectId(applierId)})
+      res.json({ message: 'Trainer application confirmed successfully' });
+    } else {
+      res.status(500).json({ message: 'Failed to confirm trainer application' });
+    }
+  } catch (error) {
+    console.error(error);
+  }
+});
+
    //trainer booking api
    app.post('/booking', async (req,res) => {
     const booking = req.body;
