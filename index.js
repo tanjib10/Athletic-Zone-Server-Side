@@ -87,6 +87,17 @@ async function run() {
         console.log(error);
       }
     });
+    app.patch("/users/admin/:id", async (req,res) => {
+      const id = req.params.id;
+      const query = { _id : new ObjectId(id)};
+      const updatedDoc = {
+        $set : {
+          role : 'admin'
+        }
+      }
+      const result = await userCollection.updateOne(filter,updatedDoc);
+      res.send(result)
+    })
 
     // Trainer Details API
 app.get('/api/trainers/:id', async (req, res) => {
@@ -178,10 +189,6 @@ app.post('/api/forum-posts/:id/vote', async (req, res) => {
   }
 });
 
-
-
-
-
    //newsletter subscription api
    app.get('/subscribers', async (req,res) => {
     const result = await subscriberCollection.find().toArray();
@@ -198,6 +205,10 @@ app.post('/api/forum-posts/:id/vote', async (req, res) => {
     const applier = req.body;
     const result = await newTrainerCollection.insertOne(applier);
     res.send(result) 
+   })
+    app.get('/api/new/trainers', async (req,res) => {
+    const result = await newTrainerCollection.find().toArray();
+    res.send(result)
    })
 
    //trainer booking api
