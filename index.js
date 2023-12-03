@@ -123,7 +123,7 @@ app.get('/api/forum-posts', async (req, res) => {
 
     const forumPosts = await forumPostCollection
       .find()
-      .sort({ _id: -1 }) // Sort by _id in descending order for the latest posts first
+      .sort({ _id: -1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize)
       .toArray();
@@ -131,7 +131,6 @@ app.get('/api/forum-posts', async (req, res) => {
     res.json({ forumPosts, totalPages });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
