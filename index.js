@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const jwt = require('jsonwebtoken')
 require('dotenv').config()
 const port = process.env.PORT || 5000;
 
@@ -35,7 +36,33 @@ async function run() {
     const bookingsCollection = client.db("athleticDb").collection("bookings");
     const classesCollection = client.db("athleticDb").collection("classes");
  const forumPostCollection = client.db("athleticDb").collection("forumPosts");
-    //users api
+
+
+
+ //jwt api
+ app.post('/jwt', async (req,res) => {
+  const user = req.body;
+  const token = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn: '1h'})
+  res.send({token})
+ })
+ 
+ const verifyToken = (req,res,next) =>{
+  if(!req.headers.authorization){
+    return res.status(401).send({message: 'forbidden access'})
+  }
+ const token = req.headers.authorization.split(' ')[1]
+ jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded) => {
+if(err){
+  return res.status(401).send({message: 'forbidden access'})
+}
+req.decoded = decoded;
+next();
+ } )
+  // next();
+ }
+
+
+ //users api
    app.post('/users', async (req,res) => {
       const user = req.body;
       const query = {email: user.email}
@@ -79,7 +106,7 @@ async function run() {
     });
 
     //user api
-    app.get('/users', async (req, res) => {
+    app.get('/users',  async (req, res) => {
       try {
         const user = await userCollection.find().toArray();
         res.json(user);
@@ -87,6 +114,32 @@ async function run() {
         console.log(error);
       }
     });
+
+    const verifyAdmin = async (req,res,next) => {
+      const email = req.decoded.email;
+      const query = {email : email}
+      const user = await userCollection.findOne(query);
+      const isAdmin = user?.role === 'admin';
+      if(!isAdmin){
+        return res.status(403).send({message: 'forbidden access'});
+      }
+      next();
+    }
+
+    app.get('/users/admin/:email', verifyToken, async (req,res) =>{
+        const email = req.params.email;
+        if(email !== req.decoded.email){
+          return res.status(403).send({message: "unauthorized"})
+        }
+        const query = {email : email};
+        const user = await userCollection.findOne(query);
+        let admin = false ;
+        if(user){
+          admin = user?.role === 'admin';
+        }
+        res.send({admin})
+    })
+
     app.patch("/users/admin/:id", async (req,res) => {
       const id = req.params.id;
       const query = { _id : new ObjectId(id)};
@@ -210,51 +263,6 @@ app.post('/api/forum-posts/:id/vote', async (req, res) => {
     const result = await newTrainerCollection.find().toArray();
     res.send(result)
    })
-
- app.delete('/api/new/trainers/:id', async (req, res) => {
-  const applierId = req.params.id;
-  try {
-  const isValidObjectId = ObjectId.isValid(applierId);
-
-if (!isValidObjectId) {
-  return res.status(400).json({ message: 'Invalid ObjectId' });
-}
-
-const objectId = new ObjectId(applierId);
-const result = await newTrainerCollection.deleteOne({ _id: objectId });
-    if (result.deletedCount === 1) {
-      res.json({ message: 'Trainer application rejected successfully' });
-    } else {
-      res.status(404).json({ message: 'Trainer application not found' });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-});
-
-app.post('/api/new/trainers/train/:id/confirm', async (req, res) => {
-  const applierId = req.params.id;
-  try {
-    const isValidObjectId = ObjectId.isValid(applierId);
-
-if (!isValidObjectId) {
-  return res.status(400).json({ message: 'Invalid ObjectId' });
-}
-
-const objectId = new ObjectId(applierId);
-const applier = await newTrainerCollection.findOne({ _id: objectId });
-    const result = await trainerCollection.insertOne(applier);
-    if (result.insertedCount === 1) {
-      await newTrainerCollection.deleteOne({_id : new ObjectId(applierId)})
-      res.json({ message: 'Trainer application confirmed successfully' });
-    } else {
-      res.status(500).json({ message: 'Failed to confirm trainer application' });
-    }
-  } catch (error) {
-    console.error(error);
-  }
-});
 
    //trainer booking api
    app.post('/booking', async (req,res) => {
