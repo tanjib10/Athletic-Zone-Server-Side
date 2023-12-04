@@ -73,6 +73,19 @@ next();
       const result = await userCollection.insertOne(user)
       res.send(result)
    })
+
+
+   app.post('/api/forum-posts', async (req, res) => {
+  const newPost = req.body;
+
+  try {
+    const result = await forumPostCollection.insertOne(newPost);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
   
           // Gallery API for Infinite Scrolling
     app.get('/api/images', async (req, res) => {
@@ -104,6 +117,18 @@ next();
         console.log(error);
       }
     });
+    
+   app.post('/classes', async (req, res) => {
+  const newPost = req.body;
+
+  try {
+    const result = await classesCollection.insertOne(newPost);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
     //user api
     app.get('/users',  async (req, res) => {
@@ -245,6 +270,10 @@ app.post('/api/forum-posts/:id/vote', async (req, res) => {
    //newsletter subscription api
    app.get('/subscribers', async (req,res) => {
     const result = await subscriberCollection.find().toArray();
+    res.send(result)
+   })
+   app.get('/forums', async (req,res) => {
+    const result = await forumPostCollection.find().toArray();
     res.send(result)
    })
    app.post('/subscribers', async (req,res) => {
